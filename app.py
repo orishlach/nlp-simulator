@@ -4,8 +4,13 @@ import json
 from protocol_parser import process_document
 import tempfile
 import os
+from PIL import Image
 
 st.set_page_config(page_title="🎤 Knesset Protocols Analyzer", page_icon="🎤", layout="wide")
+
+# הצגת לוגו
+logo = Image.open("logo.png")
+st.image(logo, width=100)
 
 st.title("🎤 NLP Final Project - Knesset Protocols Analyzer")
 st.write("Upload Knesset protocol .docx files, and get structured NLP output!")
