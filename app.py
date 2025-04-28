@@ -5,12 +5,6 @@ import tempfile
 import os
 from PIL import Image
 import pandas as pd
-import plotly.express as px
-import base64
-from streamlit_extras.colored_header import colored_header
-from streamlit_extras.add_vertical_space import add_vertical_space
-from streamlit_card import card
-import altair as alt
 
 # Set page configuration with proper RTL support
 st.set_page_config(
@@ -60,12 +54,44 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     
-    .results-card {
+    .stSelectbox div[data-baseweb="select"] > div {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    .dataframe {
+        direction: rtl;
+        text-align: right;
+    }
+    
+    footer {
+        visibility: hidden;
+    }
+    
+    .blue-header {
+        background-color: #e6f2ff;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        border-right: 4px solid #003366;
+    }
+    
+    .metric-container {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+    }
+    
+    .sentence-card {
         background-color: white;
-        padding: 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 1.5rem;
+        padding: 1rem;
+        border-radius: 8px;
+        border-right: 3px solid #007bff;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
     .speaker-tag {
@@ -78,90 +104,54 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
     
-    .stTabs [data-baseweb="tab-list"] {
-        direction: rtl;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        font-size: 1rem;
-        font-weight: 500;
-    }
-    
-    /* Loading animation style */
-    .loading-animation {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 200px;
-    }
-    
-    footer {
-        visibility: hidden;
-    }
-    
-    /* Custom table styling */
-    .dataframe {
-        direction: rtl;
-        text-align: right;
-    }
-    
-    /* Custom select box styling */
-    .stSelectbox div[data-baseweb="select"] > div {
-        direction: rtl;
-        text-align: right;
-    }
-    
-    /* Custom metric styling */
-    .metric-card {
-        background-color: #f1f8ff;
-        padding: 1rem;
-        border-radius: 8px;
-        border-left: 5px solid #007bff;
-        margin-bottom: 1rem;
-    }
-    
-    /* Custom download button */
-    .download-button {
-        background-color: #28a745;
-        color: white;
-        border-radius: 5px;
-        border: none;
-        padding: 0.5rem 1rem;
-        font-weight: 500;
-        margin-top: 1rem;
-    }
-    
-    .download-button:hover {
-        background-color: #218838;
-    }
-    
-    /* Card styling */
-    .sentence-card {
+    .feature-card {
         background-color: white;
-        padding: 1rem;
+        padding: 1.5rem;
         border-radius: 8px;
-        border-right: 3px solid #007bff;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        border: 1px solid #eee;
     }
     
-    /* Sidebar styling */
-    .css-1d391kg {
-        direction: rtl;
-        text-align: right;
+    .welcome-container {
+        text-align: center;
+        padding: 3rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin: 2rem 0;
+    }
+    
+    .feature-box {
+        background-color: #e6f2ff;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .divider {
+        height: 1px;
+        background-color: #eee;
+        margin: 2rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Helper functions
-def get_image_base64(image_path):
-    with open(image_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode()
-
 def create_sidebar():
     with st.sidebar:
-        st.image("logo.png", width=100)
-        st.title("🎤 מנתח פרוטוקולים של הכנסת")
+        try:
+            # Try to load the logo - use a default header if it fails
+            st.image("logo.png", width=100)
+        except:
+            st.markdown("<h3>🎤 מנתח פרוטוקולים</h3>", unsafe_allow_html=True)
+            
+        st.title("מנתח פרוטוקולים של הכנסת")
         st.markdown("---")
         st.subheader("אודות")
         st.write("""
@@ -183,17 +173,17 @@ def display_metrics(filtered_sentences):
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
         st.metric("מספר משפטים", len(filtered_sentences))
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
         st.metric("מספר דוברים", len(set(s['speaker_name'] for s in filtered_sentences)))
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.markdown('<div class="metric-container">', unsafe_allow_html=True)
         avg_sentence_length = sum(len(s['sentence_text'].split()) for s in filtered_sentences) / len(filtered_sentences)
         st.metric("אורך משפט ממוצע", f"{avg_sentence_length:.1f} מילים")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -203,84 +193,48 @@ def visualize_data(filtered_sentences):
     df = pd.DataFrame(filtered_sentences)
     
     # Speaker frequency chart
-    colored_header(
-        label="ניתוח דוברים",
-        description="התפלגות המשפטים לפי דובר",
-        color_name="blue-70"
-    )
+    st.markdown("""
+    <div class="blue-header">
+        <h3>ניתוח דוברים</h3>
+        <p style="color: #666666;">התפלגות המשפטים לפי דובר</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     speaker_counts = df['speaker_name'].value_counts().reset_index()
     speaker_counts.columns = ['דובר', 'מספר משפטים']
     
     if len(speaker_counts) > 10:
         top_speakers = speaker_counts.head(10)
-        fig = px.bar(
-            top_speakers, 
-            x='מספר משפטים', 
-            y='דובר',
-            orientation='h',
-            title='10 הדוברים המובילים',
-            labels={'דובר': 'שם הדובר', 'מספר משפטים': 'מספר המשפטים'},
-            color='מספר משפטים',
-            color_continuous_scale='Blues'
-        )
+        chart_data = top_speakers
+        title = '10 הדוברים המובילים'
     else:
-        fig = px.bar(
-            speaker_counts, 
-            x='מספר משפטים', 
-            y='דובר',
-            orientation='h',
-            title='מספר משפטים לפי דובר',
-            labels={'דובר': 'שם הדובר', 'מספר משפטים': 'מספר המשפטים'},
-            color='מספר משפטים',
-            color_continuous_scale='Blues'
-        )
+        chart_data = speaker_counts
+        title = 'מספר משפטים לפי דובר'
     
-    fig.update_layout(
-        height=400,
-        margin=dict(l=20, r=20, t=40, b=20),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Heebo, sans-serif", size=12),
-        yaxis=dict(autorange="reversed")
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
+    # Using Streamlit's native bar chart
+    st.subheader(title)
+    st.bar_chart(chart_data.set_index('דובר'))
     
     # Sentence length distribution
     df['sentence_length'] = df['sentence_text'].apply(lambda x: len(x.split()))
     
-    colored_header(
-        label="אורך משפטים",
-        description="התפלגות אורך המשפטים",
-        color_name="blue-70"
-    )
+    st.markdown("""
+    <div class="blue-header">
+        <h3>אורך משפטים</h3>
+        <p style="color: #666666;">התפלגות אורך המשפטים</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    fig_hist = px.histogram(
-        df, 
-        x='sentence_length',
-        nbins=20,
-        title='התפלגות אורך המשפטים (מספר מילים)',
-        labels={'sentence_length': 'אורך המשפט (מילים)', 'count': 'מספר משפטים'},
-        color_discrete_sequence=['#003366']
-    )
-    
-    fig_hist.update_layout(
-        height=300,
-        margin=dict(l=20, r=20, t=40, b=20),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Heebo, sans-serif", size=12)
-    )
-    
-    st.plotly_chart(fig_hist, use_container_width=True)
+    st.subheader('התפלגות אורך המשפטים (מספר מילים)')
+    st.bar_chart(df['sentence_length'].value_counts().sort_index())
 
 def display_sentences(filtered_sentences):
-    colored_header(
-        label="משפטים לדוגמה",
-        description="הצגת משפטים מתוך הפרוטוקול",
-        color_name="blue-70"
-    )
+    st.markdown("""
+    <div class="blue-header">
+        <h3>משפטים לדוגמה</h3>
+        <p style="color: #666666;">הצגת משפטים מתוך הפרוטוקול</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     for i, sentence in enumerate(filtered_sentences[:30]):
         st.markdown(f"""
@@ -338,23 +292,27 @@ def main():
                 os.unlink(tmp_file_path)
             
             if all_sentences:
-                # Success message with confetti animation
-                st.balloons()
+                # Success message
                 st.success(f"✅ הוצאו בהצלחה {len(all_sentences)} משפטים מהפרוטוקולים!")
                 
                 # Display metrics
                 display_metrics(all_sentences)
                 
-                # Tabs for different views
-                tab1, tab2, tab3 = st.tabs(["📊 ויזואליזציה", "📝 משפטים", "⚙️ סינון"])
+                # Create a select box for navigation
+                page = st.selectbox(
+                    "בחר תצוגה:",
+                    ["📊 ויזואליזציה", "📝 משפטים", "⚙️ סינון מתקדם"]
+                )
                 
-                with tab1:
+                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+                
+                if page == "📊 ויזואליזציה":
                     visualize_data(all_sentences)
                 
-                with tab2:
+                elif page == "📝 משפטים":
                     display_sentences(all_sentences)
                 
-                with tab3:
+                elif page == "⚙️ סינון מתקדם":
                     st.subheader("סננו את התוצאות")
                     
                     # Filters
@@ -396,7 +354,7 @@ def main():
                         st.dataframe(df_filtered[['speaker_name', 'sentence_text', 'protocol_name']])
                 
                 # Download section
-                st.markdown("---")
+                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
                 st.subheader("הורדת הנתונים")
                 
                 col1, col2 = st.columns(2)
@@ -422,22 +380,22 @@ def main():
                     )
         
     else:
-        # Display welcome card when no files uploaded
+        # Display welcome message when no files uploaded
         st.markdown("""
-        <div style="text-align: center; padding: 3rem 1rem; background-color: #f8f9fa; border-radius: 10px; margin: 2rem 0;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8f/Emblem_of_Israel.svg" style="width: 100px; margin-bottom: 1rem;">
-            <h2 style="margin-bottom: 1rem;">ברוכים הבאים למנתח פרוטוקולים של הכנסת</h2>
+        <div class="welcome-container">
+            <h2 style="margin-bottom: 1rem; color: #003366;">ברוכים הבאים למנתח פרוטוקולים של הכנסת</h2>
             <p style="font-size: 1.1rem; margin-bottom: 2rem;">העלו קובצי פרוטוקול בפורמט .docx כדי להתחיל בניתוח</p>
-            <div style="display: flex; gap: 1rem; justify-content: center;">
-                <div style="background-color: #e6f2ff; padding: 1rem; border-radius: 8px; width: 200px;">
+            
+            <div class="feature-grid">
+                <div class="feature-box">
                     <h3 style="color: #003366; margin-bottom: 0.5rem;">ניתוח טקסט</h3>
                     <p>עיבוד שפה טבעית לפרוטוקולים של הכנסת</p>
                 </div>
-                <div style="background-color: #e6f2ff; padding: 1rem; border-radius: 8px; width: 200px;">
+                <div class="feature-box">
                     <h3 style="color: #003366; margin-bottom: 0.5rem;">ויזואליזציה</h3>
                     <p>תצוגות גרפיות להבנה מהירה של הנתונים</p>
                 </div>
-                <div style="background-color: #e6f2ff; padding: 1rem; border-radius: 8px; width: 200px;">
+                <div class="feature-box">
                     <h3 style="color: #003366; margin-bottom: 0.5rem;">ייצוא נתונים</h3>
                     <p>הורדת תוצאות הניתוח בפורמטים שונים</p>
                 </div>
@@ -445,9 +403,36 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Example analysis
-        st.subheader("דוגמה לניתוח:")
-        st.image("https://i.ibb.co/sQKGcHL/knesset-analysis-example.png", caption="דוגמה של ניתוח פרוטוקול (להמחשה בלבד)")
+        # Features explanation
+        st.subheader("תכונות המערכת:")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div class="feature-card">
+                <h4 style="color: #003366; margin-bottom: 1rem;">ניתוח פרוטוקולים</h4>
+                <ul>
+                    <li>זיהוי אוטומטי של דוברים</li>
+                    <li>חילוץ משפטים מתוך הטקסט</li>
+                    <li>ניתוח סטטיסטי של הדיונים</li>
+                    <li>סינון מתקדם לפי דובר ותוכן</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown("""
+            <div class="feature-card">
+                <h4 style="color: #003366; margin-bottom: 1rem;">יתרונות המערכת</h4>
+                <ul>
+                    <li>עיבוד מהיר של קבצי Word</li>
+                    <li>ממשק משתמש נוח ואינטואיטיבי</li>
+                    <li>אפשרויות ייצוא מתקדמות</li>
+                    <li>תמיכה בעברית מלאה</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
 # Run the application
 if __name__ == "__main__":
